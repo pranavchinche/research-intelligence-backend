@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = (
         "http://localhost:3001,"
         "http://192.168.137.1:3001,"
-        "http://192.168.90.91:3001"
+        "http://192.168.90.91:3001,"
+        "http://172.25.98.22:3001"
     )
 
     # LLM Provider Keys (all optional, environment-only)
