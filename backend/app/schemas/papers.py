@@ -35,6 +35,8 @@ class PaperCreate(BaseModel):
 
     pdf_path: str | None = None
 
+    drive_file_id: str | None = None
+
     full_text: str | None = None
 
 
@@ -68,6 +70,8 @@ class PaperResponse(BaseModel):
     pdf_url: str | None = None
 
     pdf_path: str | None = None
+
+    drive_file_id: str | None = None
 
     full_text: str | None = None
 

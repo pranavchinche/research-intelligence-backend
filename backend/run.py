@@ -1,4 +1,6 @@
-# D:\FYP\main\backend\run.py
+#D:\FYP\main\backend\run.py
+
+import os
 
 import uvicorn
 
@@ -9,5 +11,5 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host=settings.HOST,
-        port=settings.PORT,
+        port=int(os.environ.get("PORT", settings.PORT)),
     )

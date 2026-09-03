@@ -64,12 +64,15 @@ class HealthChecker:
                 "https://api.openalex.org/works?per-page=1",
                 self._timeout,
             ),
-            "ollama": ServiceHealth(
+        }
+
+        # Only check Ollama if it is explicitly enabled.
+        if settings.OLLAMA_ENABLED:
+            self.services["ollama"] = ServiceHealth(
                 "ollama",
                 f"{settings.OLLAMA_BASE_URL}/api/tags",
                 self._timeout,
-            ),
-        }
+            )
 
     async def check_all(self) -> dict[str, dict]:
         """Check all services. Returns status dict."""

@@ -1,0 +1,36 @@
+# Virtual environments
+myenv/
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files with secrets
+.env
+
+# Local storage / uploads
+storage/
+uploads/
+downloads/
+
+# Model cache
+.cache/
+models/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/

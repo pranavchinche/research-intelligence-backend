@@ -1,3 +1,4 @@
+import tempfile
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,15 +19,16 @@ class Settings(BaseSettings):
     ARXIV_BASE_URL: str = "http://export.arxiv.org/api/query"
     OPENALEX_BASE_URL: str = "https://api.openalex.org"
 
-    PDF_STORAGE_DIR: str = "D:/FYP/main/storage/papers"
-    PDF_DOWNLOAD_DIR: str = "D:/FYP/main/storage/downloads"
+    PDF_STORAGE_DIR: str = ""
+    PDF_DOWNLOAD_DIR: str = ""
 
-    CORS_ORIGINS: str = (
-        "http://localhost:3001,"
-        "http://192.168.137.1:3001,"
-        "http://192.168.90.91:3001,"
-        "http://172.25.98.22:3001"
-    )
+    # Google Drive configuration
+    GOOGLE_DRIVE_FOLDER_ID: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REFRESH_TOKEN: str = ""
+
+    CORS_ORIGINS: str = "http://localhost:3001"
 
     # LLM Provider Keys (all optional, environment-only)
     GROQ_API_KEY: str = ""
@@ -37,24 +39,20 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2:latest"
     OLLAMA_ENABLED: bool = True
-    # OLLAMA_TIMEOUT: float = 0.0  # 0.0 => fall back to LLM_TIMEOUT
 
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     GROQ_MODEL: str = "llama-3.1-8b-instant"
     GROQ_ENABLED: bool = True
-    # GROQ_TIMEOUT: float = 0.0
 
     GEMINI_BASE_URL: str = (
         "https://generativelanguage.googleapis.com/v1beta"
     )
     GEMINI_MODEL: str = "gemini-1.5-flash"
     GEMINI_ENABLED: bool = True
-    # GEMINI_TIMEOUT: float = 0.0
 
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENROUTER_MODEL: str = "meta-llama/llama-3.1-8b-instruct:free"
     OPENROUTER_ENABLED: bool = True
-    # OPENROUTER_TIMEOUT: float = 0.0
 
     LLM_DEFAULT_PROVIDER: str = "ollama"
     LLM_FALLBACK_CHAIN: str = "ollama"
@@ -104,6 +102,27 @@ class Settings(BaseSettings):
     def is_offline_mode(self) -> bool:
         return self.APP_ENV == "offline"
 
+    @property
+    def use_google_drive(self) -> bool:
+        return bool(
+            self.GOOGLE_DRIVE_FOLDER_ID
+            and self.GOOGLE_CLIENT_ID
+            and self.GOOGLE_CLIENT_SECRET
+            and self.GOOGLE_REFRESH_TOKEN
+        )
+
+    @property
+    def resolved_pdf_storage_dir(self) -> str:
+        if self.PDF_STORAGE_DIR:
+            return self.PDF_STORAGE_DIR
+        return tempfile.mkdtemp(prefix="pdf_storage_")
+
+    @property
+    def resolved_pdf_download_dir(self) -> str:
+        if self.PDF_DOWNLOAD_DIR:
+            return self.PDF_DOWNLOAD_DIR
+        return tempfile.mkdtemp(prefix="pdf_download_")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
@@ -111,3 +130,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Ensure storage dirs exist for local mode
+if not settings.use_google_drive:
+    import os
+    os.makedirs(settings.resolved_pdf_storage_dir, exist_ok=True)
+    os.makedirs(settings.resolved_pdf_download_dir, exist_ok=True)
+    # Backfill empty defaults so downstream code works
+    if not settings.PDF_STORAGE_DIR:
+        settings.PDF_STORAGE_DIR = settings.resolved_pdf_storage_dir
+    if not settings.PDF_DOWNLOAD_DIR:
+        settings.PDF_DOWNLOAD_DIR = settings.resolved_pdf_download_dir

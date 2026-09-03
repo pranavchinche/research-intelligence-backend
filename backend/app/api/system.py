@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.services.connectivity.health_checker import health_checker
 from app.services.connectivity.connectivity_guard import (
     connectivity_guard,
 )
@@ -23,12 +22,28 @@ router = APIRouter(tags=["System"])
 
 
 # ------------------------------------------------------------------
-# GET /health — dependency-aware health check
+# GET /health — liveness check (independent of external services)
 # ------------------------------------------------------------------
 
 @router.get("/health")
 async def health():
-    """Overall health check with per-dependency status."""
+    """Simple liveness check. Does NOT depend on Ollama or Drive."""
+    return {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+    }
+
+
+# ------------------------------------------------------------------
+# GET /system/health — detailed dependency-aware health check
+# ------------------------------------------------------------------
+
+@router.get("/system/health")
+async def system_health():
+    """Detailed health check with per-dependency status."""
+    from app.services.connectivity.health_checker import health_checker
+
     statuses = await health_checker.check_all()
     warnings = validate_required_secrets()
 

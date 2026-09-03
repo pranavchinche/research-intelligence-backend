@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from pathlib import Path
 
 from app.services.storage.pdf_downloader import download_pdf
 from app.services.validation.normalize import normalize_paper
@@ -112,6 +113,27 @@ async def ingest_paper(
         "pdf_path"
     )
 
+    drive_file_id = raw_paper.get(
+        "drive_file_id"
+    )
+
+    # If using Google Drive, download to temp for processing
+    if not pdf_path and drive_file_id:
+        try:
+            from app.services.storage.factory import get_storage
+            storage = get_storage()
+            pdf_path = storage.download_to_temp(
+                drive_file_id,
+                f"paper_{drive_file_id}.pdf",
+            )
+        except Exception as e:
+            return {
+                "status": "rejected",
+                "errors": [
+                    f"Google Drive download failed: {str(e)}"
+                ],
+            }
+
     # ---------------------------------
     # 5. DOWNLOAD PDF IF NECESSARY
     # ---------------------------------
@@ -162,6 +184,7 @@ async def ingest_paper(
             ),
             "pdf_url": paper.get("pdf_url"),
             "pdf_path": None,
+            "drive_file_id": drive_file_id,
             "full_text": None,
         }
 
@@ -312,7 +335,8 @@ async def ingest_paper(
             paper.get("categories", [])
         ),
         "pdf_url": paper.get("pdf_url"),
-        "pdf_path": pdf_path,
+        "pdf_path": pdf_path if not drive_file_id else None,
+        "drive_file_id": drive_file_id,
         "full_text": full_text,
     }
 
@@ -343,6 +367,22 @@ async def ingest_paper(
         db,
         saved_paper.id
     )
+
+    # ---------------------------------
+    # 15. CLEANUP TEMP PDF
+    #
+    # When the PDF was downloaded from Google Drive (or a remote URL)
+    # into a temporary file, remove it now that processing is done.
+    # The PDF is stored permanently in Drive, not in the temp dir.
+    # ---------------------------------
+
+    if drive_file_id and pdf_path:
+        try:
+            cleanup_path = Path(pdf_path)
+            if cleanup_path.exists():
+                cleanup_path.unlink()
+        except Exception:
+            pass
 
     # ---------------------------------
     # 15. FINAL RESPONSE
