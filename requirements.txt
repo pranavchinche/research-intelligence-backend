@@ -1,0 +1,13 @@
+FastAPI
+uvicorn
+SQLAlchemy
+Pydantic
+psycopg2
+httpx
+PyMuPDF
+pydantic-settings
+asyncpg
+python-multipart
+pathlib
+sentence-transformers 
+pgvector

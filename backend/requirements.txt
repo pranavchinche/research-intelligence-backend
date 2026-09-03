@@ -1,0 +1,15 @@
+FastAPI
+uvicorn[standard]
+SQLAlchemy[asyncio]
+Pydantic
+psycopg2-binary
+httpx
+PyMuPDF
+pydantic-settings
+asyncpg
+python-multipart
+sentence-transformers
+pgvector
+redis[hiredis]
+slowapi
+python-magic
