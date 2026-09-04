@@ -13,7 +13,7 @@ __pycache__/
 .env
 
 # Local storage / uploads
-storage/
+storages/
 uploads/
 downloads/
 
