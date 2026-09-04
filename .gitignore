@@ -71,7 +71,7 @@ storage/
 # ==============================
 # Model / cache files
 # ==============================
-models/
+
 .cache/
 huggingface/
 

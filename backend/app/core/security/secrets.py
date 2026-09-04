@@ -37,7 +37,7 @@ def validate_required_secrets() -> list[str]:
 
     warnings = []
 
-    if not settings.DATABASE_URL:
+    if not settings.active_database_url:
         warnings.append("DATABASE_URL is not configured")
 
     llm_chain = settings.llm_fallback_chain

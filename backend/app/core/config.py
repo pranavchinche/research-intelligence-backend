@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     DATABASE_URL: str = ""
+    LOCAL_DATABASE_URL: str = ""
+
+    # DB_ENV selects which database to use:
+    #   "local"     -> LOCAL_DATABASE_URL
+    #   "production"-> DATABASE_URL (e.g. Neon)
+    DB_ENV: str = "local"
 
     LOG_LEVEL: str = "INFO"
 
@@ -101,6 +107,17 @@ class Settings(BaseSettings):
     @property
     def is_offline_mode(self) -> bool:
         return self.APP_ENV == "offline"
+
+    @property
+    def active_database_url(self) -> str:
+        """Select the active database URL based on DB_ENV.
+
+        DB_ENV=production -> DATABASE_URL (e.g. Neon)
+        DB_ENV=local      -> LOCAL_DATABASE_URL
+        """
+        if self.DB_ENV == "production":
+            return self.DATABASE_URL
+        return self.LOCAL_DATABASE_URL or self.DATABASE_URL
 
     @property
     def use_google_drive(self) -> bool:
