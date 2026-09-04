@@ -1,5 +1,6 @@
 #backend/app/services/embedding_service.py
 import asyncio
+import threading
 from functools import partial
 
 from sentence_transformers import SentenceTransformer
@@ -7,7 +8,17 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "all-MiniLM-L6-v2"
 
-model = SentenceTransformer(MODEL_NAME)
+_model = None
+_model_lock = threading.Lock()
+
+
+def _get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        with _model_lock:
+            if _model is None:
+                _model = SentenceTransformer(MODEL_NAME)
+    return _model
 
 
 def _encode_sync(text: str) -> list[float]:
@@ -18,6 +29,8 @@ def _encode_sync(text: str) -> list[float]:
         )
 
     text = text.replace("\x00", "")
+
+    model = _get_model()
 
     embedding = model.encode(
         text,
@@ -51,6 +64,7 @@ async def generate_embedding_async(text: str) -> list[float]:
     thread pool so the asyncio event loop is never blocked.
     """
     loop = asyncio.get_running_loop()
+    _get_model()
     return await loop.run_in_executor(
         None, partial(_encode_sync, text)
     )
